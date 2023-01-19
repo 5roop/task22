@@ -2,7 +2,7 @@ import os
 import parse
 import logging
 import pandas as pd
-from typing import Set, List
+from typing import Set, List, Tuple
 from transliterate import translit
 chars_to_remove = {
     '!',
@@ -86,7 +86,7 @@ def is_alpha(token: str) -> bool:
     return bool(compiled_pattern.match(token))
 
 
-def get_N_tokens(N=5000, path="/home/peterr/macocu/taskB/task4/toy_tokens.csv") -> set:
+def get_N_tokens(N=5000, path="/home/peterr/macocu/task22/tokens.csv") -> set:
     """Loads tokens from CSV and returns as set of N most important for every language.
 
     Args:
@@ -181,12 +181,11 @@ def read_and_split_file(path: str) -> List[str]:
     return texts
 
 
-def load_SET_dataset():
+def load_fasttext(path) -> Tuple[List[str], List[str]]:
     SETimes = list()
-    for split in ["train", "test", "dev"]:
-        with open(os.path.join(final_dir, f"{split}.fasttxt"), "r") as f:
-            lines = f.readlines()
-            SETimes.extend(lines)
+    with open(path, "r") as f:
+        lines = f.readlines()
+        SETimes.extend(lines)
 
     p = parse.compile("__label__{lang} {text}")
     langs = list()
@@ -202,14 +201,3 @@ def load_SET_dataset():
 
     eval_df = pd.DataFrame(data={"text": texts, "labels": langs})
     return eval_df
-
-
-def load_rss_dataset():
-    filename = "/home/peterr/macocu/taskB/task4/22_webcrawl.json"
-    import pandas as pd
-    df = pd.read_json(filename)
-    df["text"] = df.text.apply(transliterate)
-    df["text"] = df.text.apply(remove_chars)
-    df["text"] = df.text.apply(lambda s: " ".join(
-        [word for word in s.split(" ") if is_alpha(word)]))
-    return df.rename(columns={"language": "labels"})
